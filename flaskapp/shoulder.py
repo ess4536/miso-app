@@ -62,9 +62,8 @@ class Shoulder(object):
             if xa < width/2:
                 # 上部100pxまでの直線を除く
                 if y1>100 or y2>100:
-                    # x方向に短すぎる直線を除く
+                    # 傾き2以上を除く
                     if xa > 25:
-                        # 傾き2以上を除く
                         if ya>-50 and ya<50:
                             # 描画
                             cv2.line(self.color_image,(x1,y1),(x2,y2),(0,0,255),2)
@@ -84,9 +83,9 @@ class Shoulder(object):
         if (len(xline) != 2 or len(yline) != 2):
             result = "検出できなかった"
         else:
-            if((yline[0]-yline[1] > 10) or (yline[0]-yline[1] < -10)):
+            if (yline[0]-yline[1] > 10) or (yline[0]-yline[1] < -10):
                 result = "高さ"
-            elif((xline[0]-xline[1] > 10) or (xline[0]-xline[1] < -10)):
+            elif (xline[0]-xline[1] > 10) or (xline[0]-xline[1] < -10):
                 result = "回転"
             else:
                 result = "おけ"
