@@ -66,9 +66,9 @@ class Shoulder(object):
                     if xa > 25:
                         # 傾き2以上を除く
                         if ya>-50 and ya<50:
-                            # 描画して保存する
+                            # 描画
                             cv2.line(self.color_image,(x1,y1),(x2,y2),(0,0,255),2)
-                            # <file name 指定>
+                            # 描画後の画像保存
                             save_path = SAVE_DIR + self.img_name
                             cv2.imwrite(save_path, self.color_image)
 
