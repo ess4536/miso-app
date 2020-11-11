@@ -11,13 +11,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    name = "Hoge"
-    return render_template('index.html', title='flask test', name=name)
-
-@app.route('/good')
-def good():
-    name = "Good"
-    return name
+    return render_template('index.html', title='flask test')
 
 @app.route('/upload', methods=["POST"])
 def upload():
