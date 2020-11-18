@@ -14,7 +14,7 @@ class Image(object):
         img_name = now.strftime('%Y%m%d_%H%M%S') + '.jpg'
         save_path = os.path.join(SAVE_DIR, img_name)
         cv2.imwrite(save_path, img)
-        return img_name
+        return save_path
 
     def get_size(img):
         height, width, channels = img.shape[:3]

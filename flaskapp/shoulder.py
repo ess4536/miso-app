@@ -4,17 +4,13 @@ import numpy as np
 import cv2
 
 
-SAVE_DIR = "./static/images/draw/"
-
 class Shoulder(object):
-    def __init__(self, img_name):
-        self.img_name = img_name
+    def __init__(self, img):
+        self.raw_image = img
         self.color_image = None
         self.gray_image = None
         self.canny_image = None
         self.hough_lines = []
-
-        self.img_path = './static/images/' + img_name
 
     # 画像を読み込む
     def get_resize_rate(self, width, height):
@@ -30,10 +26,9 @@ class Shoulder(object):
         return x_rate, y_rate
 
     def get_gray_image(self):
-        raw_image = cv2.imread(self.img_path)
-        height, width, channels = Image.get_size(raw_image)
+        height, width, channels = Image.get_size(self.raw_image)
         x_rate, y_rate = self.get_resize_rate(width, height)
-        self.color_image = cv2.resize(raw_image, dsize=None, fx=x_rate, fy=y_rate)
+        self.color_image = cv2.resize(self.raw_image, dsize=None, fx=x_rate, fy=y_rate)
         self.gray_image = cv2.cvtColor(self.color_image, cv2.COLOR_BGR2GRAY)
     
     # canny変換
@@ -68,8 +63,7 @@ class Shoulder(object):
                             # 描画
                             cv2.line(self.color_image,(x1,y1),(x2,y2),(0,0,255),2)
                             # 描画後の画像保存
-                            save_path = SAVE_DIR + self.img_name
-                            cv2.imwrite(save_path, self.color_image)
+                            save_path = Image.save(self.color_image)
 
                             line = np.append(line, [xa,ya])
                             # 負の数を正の数に変換

@@ -22,11 +22,8 @@ def upload():
         img_array = np.asarray(bytearray(stream.read()), dtype=np.uint8)
         img = cv2.imdecode(img_array, 1)
 
-        # 画像保存
-        img_name = Image.save(img)
-
         # 肩検出
-        shoulder = Shoulder(img_name)
+        shoulder = Shoulder(img)
         result, save_path = shoulder.detect()
 
         return render_template('upload.html', title='result', result=result, img=save_path)
