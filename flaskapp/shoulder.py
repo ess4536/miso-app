@@ -38,7 +38,7 @@ class Shoulder(object):
     # 確率的ハフ変換
     def hough_lines_p(self):
         self.hough_lines = cv2.HoughLinesP(
-            self.canny_image, rho=1, theta=np.pi/360, threshold=50, minLineLength=40, maxLineGap=10
+            self.canny_image, rho=1, theta=np.pi/360, threshold=50, minLineLength=80, maxLineGap=10
         )
 
     # 結果
