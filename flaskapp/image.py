@@ -7,7 +7,7 @@ import string
 
 SAVE_DIR = "./static/images/"
 
-class Image(object):
+class MyImage(object):
     # 画像を保存する
     def save(img):
         now = datetime.datetime.now()

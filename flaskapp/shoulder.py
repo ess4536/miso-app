@@ -1,4 +1,4 @@
-from image import Image
+from image import MyImage
 
 import numpy as np
 import cv2
@@ -26,7 +26,7 @@ class Shoulder(object):
         return x_rate, y_rate
 
     def get_gray_image(self):
-        height, width, channels = Image.get_size(self.raw_image)
+        height, width, channels = MyImage.get_size(self.raw_image)
         x_rate, y_rate = self.get_resize_rate(width, height)
         self.color_image = cv2.resize(self.raw_image, dsize=None, fx=x_rate, fy=y_rate)
         self.gray_image = cv2.cvtColor(self.color_image, cv2.COLOR_BGR2GRAY)
@@ -46,7 +46,7 @@ class Shoulder(object):
         self.get_gray_image()
         self.convert_canny_image()
         self.hough_lines_p()
-        height, width, channels = Image.get_size(self.color_image)
+        height, width, channels = MyImage.get_size(self.color_image)
         xline = []
         yline = []
         for line in self.hough_lines:
@@ -63,7 +63,7 @@ class Shoulder(object):
                             # 描画
                             cv2.line(self.color_image,(x1,y1),(x2,y2),(0,0,255),2)
                             # 描画後の画像保存
-                            save_path = Image.save(self.color_image)
+                            save_path = MyImage.save(self.color_image)
 
                             line = np.append(line, [xa,ya])
                             # 負の数を正の数に変換
