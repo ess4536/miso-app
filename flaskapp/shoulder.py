@@ -55,8 +55,8 @@ class Shoulder(object):
             ya = (y2-y1)
             # 画面サイズ半分以上の直線を除く
             if xa < width/2:
-                # 上部100pxまでの直線を除く
-                if y1>100 or y2>100:
+                # 上部200pxまでの直線を除く
+                if y1>200 or y2>200:
                     # 傾き2以上を除く
                     if xa > 25:
                         if ya>-50 and ya<50:
