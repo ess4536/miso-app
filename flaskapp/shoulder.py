@@ -62,8 +62,6 @@ class Shoulder(object):
                         if ya>-50 and ya<50:
                             # 描画
                             cv2.line(self.color_image,(x1,y1),(x2,y2),(0,0,255),2)
-                            # 描画後の画像保存
-                            save_path = MyImage.save(self.color_image)
 
                             line = np.append(line, [xa,ya])
                             # 負の数を正の数に変換
@@ -73,6 +71,8 @@ class Shoulder(object):
                                 ya = -ya
                             xline =np.append(xline, xa)
                             yline =np.append(yline, ya)
+        # 描画後の画像保存
+        save_path = MyImage.save(self.color_image)
         # ここかえたい
         if (len(xline) != 2 or len(yline) != 2):
             result = "検出できませんでした。"
