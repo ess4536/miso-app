@@ -14,21 +14,20 @@ app.config["JSON_AS_ASCII"] = False
 def index():
     return render_template('index.html', title='ProtType')
 
-@app.route('/upload', methods=["POST"])
-def upload():
-    if request.files['image']:
-        # 画像読み込み
-        stream = request.files['image'].stream
-        img_array = np.asarray(bytearray(stream.read()), dtype=np.uint8)
-        img = cv2.imdecode(img_array, 1)
 
-        # 肩検出
-        shoulder = Shoulder(img)
-        result, save_path = shoulder.detect()
+@app.route('/shoulder', methods=["POST"])
+def shoulder():
+    
+    # return jsonify(return_json)
+    stream = request.files['image'].stream
+    img_array = np.asarray(bytearray(stream.read()), dtype=np.uint8)
+    img = cv2.imdecode(img_array, 1)
 
-        return render_template('upload.html', title='result', result=result, img=save_path)
-    else:
-        return "empty error"
+    shoulder = Shoulder(img)
+    result, save_path = shoulder.detect()
+
+    # return "\'{\"result\":\"" + result + "\",\"img\":\"" + save_path + "\"}\'"
+    return result + "," + save_path
 
 if __name__ == "__main__":
     app.run(debug=True)

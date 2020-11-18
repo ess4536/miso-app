@@ -75,12 +75,12 @@ class Shoulder(object):
                             yline =np.append(yline, ya)
         # ここかえたい
         if (len(xline) != 2 or len(yline) != 2):
-            result = "検出できなかった"
+            result = "検出できませんでした。"
         else:
             if (yline[0]-yline[1] > 10) or (yline[0]-yline[1] < -10):
-                result = "高さ"
+                result = "傾むいてます。"
             elif (xline[0]-xline[1] > 10) or (xline[0]-xline[1] < -10):
-                result = "回転"
+                result = "回転してます。"
             else:
-                result = "おけ"
+                result = "OK"
         return result, save_path
