@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from shoulder import Shoulder
+from image import MyImage
 
 import numpy as np
 import cv2
@@ -23,8 +24,10 @@ def shoulder():
     img_array = np.asarray(bytearray(stream.read()), dtype=np.uint8)
     img = cv2.imdecode(img_array, 1)
 
-    shoulder = Shoulder(img)
-    result, save_path = shoulder.detect()
+    save_path = MyImage.save(img)
+    result = "画像集めるためのアプリ"
+    # shoulder = Shoulder(img)
+    # result, save_path = shoulder.detect()
 
     # return "\'{\"result\":\"" + result + "\",\"img\":\"" + save_path + "\"}\'"
     return result + "," + save_path
