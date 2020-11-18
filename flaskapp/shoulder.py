@@ -58,8 +58,8 @@ class Shoulder(object):
                 # 上部200pxまでの直線を除く
                 if y1>200 or y2>200:
                     # 傾き2以上を除く
-                    if xa > 25:
-                        if ya>-50 and ya<50:
+                    if xa > 50:
+                        if ya>-100 and ya<100:
                             # 描画
                             cv2.line(self.color_image,(x1,y1),(x2,y2),(0,0,255),2)
 
