@@ -6,29 +6,13 @@ import cv2
 
 class Shoulder(object):
     def __init__(self, img):
-        self.raw_image = img
-        self.color_image = None
+        self.color_image = img
         self.gray_image = None
         self.canny_image = None
+        self.detect_area = [50, 450, 300, 300]
         self.hough_lines = []
 
-    # 画像を読み込む
-    def get_resize_rate(self, width, height):
-        if width > 2000 or height > 2000:
-            x_rate = 0.15
-            y_rate = 0.15
-        elif width > 1000 or height > 1000:
-            x_rate = 0.5
-            y_rate = 0.5
-        else:
-            x_rate = 1
-            y_rate = 1
-        return x_rate, y_rate
-
     def get_gray_image(self):
-        height, width, channels = MyImage.get_size(self.raw_image)
-        x_rate, y_rate = self.get_resize_rate(width, height)
-        self.color_image = cv2.resize(self.raw_image, dsize=None, fx=x_rate, fy=y_rate)
         self.gray_image = cv2.cvtColor(self.color_image, cv2.COLOR_BGR2GRAY)
     
     # canny変換
@@ -40,37 +24,59 @@ class Shoulder(object):
         self.hough_lines = cv2.HoughLinesP(
             self.canny_image, rho=1, theta=np.pi/360, threshold=50, minLineLength=80, maxLineGap=10
         )
+    
+    def detect_area_line(self, line):
+        print(line)
+        x1, y1, x2, y2 = line[0]
+        xa = (x2-x1)
+        ya = (y2-y1)
+
+        # 画面サイズを取得
+        height, width, channels = MyImage.get_size(self.color_image)
+
+        # 長すぎる直線を除く
+        if xa > (width/2):
+            return "false"
+        # 上部の直線を除く
+        if y1<self.detect_area[0] or y2<self.detect_area[0]:
+            return "false"
+        # 右部の直線を除く
+        if x1>self.detect_area[1] or x2>self.detect_area[1]:
+            return "false"
+        # 下部の直線を除く
+        if y1>self.detect_area[2] or y2>self.detect_area[2]:
+            return "false"
+        # 左部の直線を除く
+        if x1<self.detect_area[3] or x2<self.detect_area[3]:
+            return "false"
+        # x方向に短すぎる直線を除く
+        if xa < 50:
+            return "false"
+        return "true"
 
     # 結果
     def detect(self):
-        self.get_gray_image()
-        self.convert_canny_image()
-        self.hough_lines_p()
-        height, width, channels = MyImage.get_size(self.color_image)
+        self.gray_image = cv2.cvtColor(self.color_image, cv2.COLOR_BGR2GRAY)
+        self.canny_image = cv2.Canny(self.gray_image, 50, 110)
+        self.hough_lines = cv2.HoughLinesP(
+            self.canny_image, rho=1, theta=np.pi/360, threshold=50, minLineLength=80, maxLineGap=10
+        )
         xline = []
         yline = []
         for line in self.hough_lines:
-            x1, y1, x2, y2 = line[0]
-            xa = (x2-x1)
-            ya = (y2-y1)
-            # 画面サイズ半分以上の直線を除く
-            if xa < width/2:
-                # 上部200pxまでの直線を除く
-                if y1>200 or y2>200:
-                    # 傾き2以上を除く
-                    if xa > 50:
-                        if ya>-100 and ya<100:
-                            # 描画
-                            cv2.line(self.color_image,(x1,y1),(x2,y2),(0,0,255),2)
+            # 描画条件
+            is_range = self.detect_area_line(line)
+            if is_range=="true":
+                cv2.line(self.color_image,(x1,y1),(x2,y2),(0,0,255),2) # 描画
 
-                            line = np.append(line, [xa,ya])
-                            # 負の数を正の数に変換
-                            if(xa < 0):
-                                xa = -xa
-                            if(ya < 0):
-                                ya = -ya
-                            xline =np.append(xline, xa)
-                            yline =np.append(yline, ya)
+                line = np.append(line, [xa,ya])
+                # 負の数を正の数に変換
+                if(xa < 0):
+                    xa = -xa
+                if(ya < 0):
+                    ya = -ya
+                xline =np.append(xline, xa)
+                yline =np.append(yline, ya)
         # 描画後の画像保存
         save_path = MyImage.save(self.color_image)
         # ここかえたい
