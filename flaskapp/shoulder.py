@@ -9,7 +9,7 @@ class Shoulder(object):
         self.color_image = img
         self.gray_image = None
         self.canny_image = None
-        self.detect_area = [50, 450, 300, 300]
+        self.detect_area = [250, 450, 400, 300]
         self.hough_lines = []
 
     def get_gray_image(self):
@@ -25,6 +25,41 @@ class Shoulder(object):
             self.canny_image, rho=1, theta=np.pi/360, threshold=50, minLineLength=80, maxLineGap=10
         )
     
+    def remove_background(self):
+        # ゼロの空白画像を作成（imgと同じ寸法)
+        marker = np.zeros_like(self.color_image[:,:,0]).astype(np.int32)
+        # 背景部分を１で指定
+        # 手動でポイントを一つ一つ指定
+        marker[430][110] = 1
+        marker[308][164] = 1
+        marker[246][270] = 1
+        marker[32][268] = 1
+        marker[32][451] = 1
+        marker[264][451] = 1
+        marker[324][579] = 1
+        marker[430][640] = 1
+        # 切り取りたいパーツを指定
+        # 体とマスクと顔を色分けして分かりやすくしてる
+        marker[430][370] = 255    # body
+        marker[200][370] = 125    # mask
+        marker[150][370] = 62    # face
+
+        # マークされた画像を生成するアルゴリズム
+        marked = cv2.watershed(self.color_image, marker)
+        # 背景を黒にして、白にしたいものは白にする
+        marked[marked == 1] = 0
+        marked[marked > 1] = 255
+        # 3×3ピクセルのカーネルを使用して画像を薄くし、輪郭のディテールを失わないようにする
+        kernel = np.ones((3,3),np.uint8)
+        dilation = cv2.dilate(marked.astype(np.float32), kernel, iterations = 1)
+        # 最初の画像に作成したマスクを適用
+        final_img = cv2.bitwise_and(self.color_image, self.color_image, mask=dilation.astype(np.uint8))
+
+        # BGR を RGB に変換することで、正確な色で画像を描画
+        b, g, r = cv2.split(final_img)
+        final_img = cv2.merge([r, g, b])
+        self.gray_image = final_img
+
     def detect_area_line(self, line):
         print(line)
         x1, y1, x2, y2 = line[0]
@@ -56,7 +91,8 @@ class Shoulder(object):
 
     # 結果
     def detect(self):
-        self.gray_image = cv2.cvtColor(self.color_image, cv2.COLOR_BGR2GRAY)
+        self.remove_background()
+        self.gray_image = cv2.cvtColor(self.gray_image, cv2.COLOR_BGR2GRAY)
         self.canny_image = cv2.Canny(self.gray_image, 50, 110)
         self.hough_lines = cv2.HoughLinesP(
             self.canny_image, rho=1, theta=np.pi/360, threshold=50, minLineLength=80, maxLineGap=10
