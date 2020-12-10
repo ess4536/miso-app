@@ -9,8 +9,85 @@ class Shoulder(object):
         self.color_image = img
         self.gray_image = None
         self.canny_image = None
-        self.detect_area = [250, 450, 400, 300]
+        self.detect_area = [250, 600, 400, 100]
         self.hough_lines = []
+
+    def remove_background(self):
+        # ゼロの空白画像を作成（imgと同じ寸法)
+        marker = np.zeros_like(self.color_image[:,:,0]).astype(np.int32)
+
+        # 背景部分を１で指定
+        # 手動でポイントを一つ一つ指定
+        marker[431][133] = 1
+        marker[414][134] = 1
+        marker[402][136] = 1
+        marker[389][140] = 1
+        marker[373][147] = 1
+        marker[355][160] = 1
+        marker[341][175] = 1
+        marker[328][194] = 1
+        marker[315][228] = 1
+        marker[307][253] = 1
+        marker[303][278] = 1
+        marker[300][294] = 1
+        #--------------------ここまで左肩
+        #--------------------ここから頭
+        marker[273][296] = 1
+        marker[235][280] = 1
+        marker[202][275] = 1
+        marker[168][276] = 1
+        marker[146][283] = 1
+        marker[110][304] = 1
+        marker[84][331] = 1
+        marker[74][363] = 1
+        marker[71][381] = 1 #頂点
+        marker[74][399] = 1
+        marker[84][431] = 1
+        marker[110][458] = 1
+        marker[168][479] = 1
+        marker[202][486] = 1
+        marker[146][487] = 1
+        marker[235][482] = 1
+        marker[273][466] = 1
+        #-------------------ここまで頭
+        #-------------------ここから右肩
+        marker[300][468] = 1
+        marker[303][484] = 1
+        marker[307][509] = 1
+        marker[315][524] = 1
+        marker[328][558] = 1
+        marker[341][577] = 1
+        marker[355][592] = 1
+        marker[373][605] = 1
+        marker[389][612] = 1
+        marker[402][616] = 1
+        marker[414][618] = 1
+        marker[431][619] = 1
+
+        # 切り取りたいパーツを指定
+        # 体とマスクと顔を色分けして分かりやすくしてる
+        marker[391][456] = 255    # suit
+        marker[352][362] = 125    # shirt
+        marker[250][378] = 62     # face
+        marker[121][378] = 31     # head
+
+        # マークされた画像を生成するアルゴリズム
+        marked = cv2.watershed(self.color_image, marker)
+
+        # 背景を黒にして、白にしたいものは白にする
+        marked[marked == 1] = 0
+        marked[marked > 1] = 255
+
+        # 5×5ピクセルのカーネルを使用して画像を薄くし、輪郭のディテールを失わないようにする
+        kernel = np.ones((5,5),np.uint8)
+        dilation = cv2.dilate(marked.astype(np.float32), kernel, iterations = 1)
+
+        # 最初の画像に作成したマスクを適用
+        final_img = cv2.bitwise_and(self.color_image, self.color_image, mask=dilation.astype(np.uint8))
+
+        # BGR を RGB に変換することで、正確な色で画像を描画
+        b, g, r = cv2.split(final_img)
+        self.color_image = cv2.merge([r, g, b])
 
     def get_gray_image(self):
         self.gray_image = cv2.cvtColor(self.color_image, cv2.COLOR_BGR2GRAY)
@@ -25,43 +102,8 @@ class Shoulder(object):
             self.canny_image, rho=1, theta=np.pi/360, threshold=50, minLineLength=80, maxLineGap=10
         )
     
-    def remove_background(self):
-        # ゼロの空白画像を作成（imgと同じ寸法)
-        marker = np.zeros_like(self.color_image[:,:,0]).astype(np.int32)
-        # 背景部分を１で指定
-        # 手動でポイントを一つ一つ指定
-        marker[430][110] = 1
-        marker[308][164] = 1
-        marker[246][270] = 1
-        marker[32][268] = 1
-        marker[32][451] = 1
-        marker[264][451] = 1
-        marker[324][579] = 1
-        marker[430][640] = 1
-        # 切り取りたいパーツを指定
-        # 体とマスクと顔を色分けして分かりやすくしてる
-        marker[430][370] = 255    # body
-        marker[200][370] = 125    # mask
-        marker[150][370] = 62    # face
-
-        # マークされた画像を生成するアルゴリズム
-        marked = cv2.watershed(self.color_image, marker)
-        # 背景を黒にして、白にしたいものは白にする
-        marked[marked == 1] = 0
-        marked[marked > 1] = 255
-        # 3×3ピクセルのカーネルを使用して画像を薄くし、輪郭のディテールを失わないようにする
-        kernel = np.ones((3,3),np.uint8)
-        dilation = cv2.dilate(marked.astype(np.float32), kernel, iterations = 1)
-        # 最初の画像に作成したマスクを適用
-        final_img = cv2.bitwise_and(self.color_image, self.color_image, mask=dilation.astype(np.uint8))
-
-        # BGR を RGB に変換することで、正確な色で画像を描画
-        b, g, r = cv2.split(final_img)
-        final_img = cv2.merge([r, g, b])
-        self.gray_image = final_img
 
     def detect_area_line(self, line):
-        print(line)
         x1, y1, x2, y2 = line[0]
         xa = (x2-x1)
         ya = (y2-y1)
@@ -92,14 +134,16 @@ class Shoulder(object):
     # 結果
     def detect(self):
         self.remove_background()
-        self.gray_image = cv2.cvtColor(self.gray_image, cv2.COLOR_BGR2GRAY)
-        self.canny_image = cv2.Canny(self.gray_image, 50, 110)
-        self.hough_lines = cv2.HoughLinesP(
-            self.canny_image, rho=1, theta=np.pi/360, threshold=50, minLineLength=80, maxLineGap=10
-        )
+        self.get_gray_image()
+        self.convert_canny_image()
+        self.hough_lines_p()
         xline = []
         yline = []
         for line in self.hough_lines:
+            x1, y1, x2, y2 = line[0]
+            xa = (x2-x1)
+            ya = (y2-y1)
+            
             # 描画条件
             is_range = self.detect_area_line(line)
             if is_range=="true":
@@ -113,16 +157,19 @@ class Shoulder(object):
                     ya = -ya
                 xline =np.append(xline, xa)
                 yline =np.append(yline, ya)
+        # BGR を RGB に変換することで、正確な色で画像を描画
+        b, g, r = cv2.split(self.color_image)
+        self.color_image = cv2.merge([r, g, b])
         # 描画後の画像保存
         save_path = MyImage.save(self.color_image)
         # ここかえたい
-        if (len(xline) != 2 or len(yline) != 2):
-            result = "検出できませんでした。"
+        # if (len(xline) != 2 or len(yline) != 2):
+        #     result = "検出できませんでした。"
+        # else:
+        if (yline[0]-yline[1] > 30) or (yline[0]-yline[1] < -30):
+            result = "傾むいてます。"
+        elif (xline[0]-xline[1] > 30) or (xline[0]-xline[1] < -30):
+            result = "回転してます。"
         else:
-            if (yline[0]-yline[1] > 10) or (yline[0]-yline[1] < -10):
-                result = "傾むいてます。"
-            elif (xline[0]-xline[1] > 10) or (xline[0]-xline[1] < -10):
-                result = "回転してます。"
-            else:
-                result = "OK"
+            result = "OK"
         return result, save_path
